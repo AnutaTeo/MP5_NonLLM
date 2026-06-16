@@ -1,0 +1,33 @@
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code
+.vscode/
+
+# TensorBoard logs
+logs/
+*.tfevents*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large/generated videos
+videos/*.mp4
+!videos/.gitkeep
+
+# Optional: ignore checkpoints, keep only final model
+models/ppo_carracing_checkpoint_*.zip
+models/ppo_carracing_continued_*.zip
+
+# Temporary files
+*.tmp
+*.log
