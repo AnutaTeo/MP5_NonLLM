@@ -17,7 +17,7 @@ def main():
     obs = env.reset()
     total_reward = 0
 
-    for step in range(3000):
+    for step in range(9000):
         action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
 
