@@ -14,7 +14,12 @@ __pycache__/
 
 # TensorBoard logs
 logs/
+logs_minigrid/
+*/logs_minigrid/
 *.tfevents*
+
+MP5_NonLLM_dragos/
+MP5_NonLLM_pong/
 
 # OS files
 .DS_Store
@@ -31,3 +36,6 @@ models/ppo_carracing_continued_*.zip
 # Temporary files
 *.tmp
 *.log
+
+# Ignore intermediate checkpoints
+*checkpoint*.zip
