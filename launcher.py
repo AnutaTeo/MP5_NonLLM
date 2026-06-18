@@ -10,9 +10,11 @@ import os
 import glob
 
 
-BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+
+BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
 CARRACING_DIR = BASE_DIR
-PONG_DIR     = os.path.join(BASE_DIR, "pong")
+PONG_DIR      = os.path.join(BASE_DIR, "pong")
+MINIGRID_DIR  = os.path.join(BASE_DIR, "minigrid_quest")
 
 SCRIPTS = {
     "carracing_train": os.path.join(CARRACING_DIR, "train_gpu.py"),
@@ -20,13 +22,15 @@ SCRIPTS = {
     "pong_train":      os.path.join(PONG_DIR, "train.py"),
     "pong_play":       os.path.join(PONG_DIR, "play.py"),
     "pong_watch":      os.path.join(PONG_DIR, "watch.py"),
+    "minigrid_play":   os.path.join(MINIGRID_DIR, "play_levels.py"),
 }
 
 BG          = "#0f0f13"
 PANEL       = "#16161d"
 BORDER      = "#2a2a38"
-ACCENT_CAR  = "#e8a020"
-ACCENT_PONG = "#3db8f5"
+ACCENT_CAR      = "#e8a020"
+ACCENT_PONG     = "#3db8f5"
+ACCENT_MINIGRID = "#a084e8"
 TEXT        = "#e0e0e8"
 TEXT_DIM    = "#6b6b82"
 GREEN       = "#4caf7d"
@@ -383,6 +387,72 @@ class PongCard(tk.Frame):
         ))
 
 
+# ── MiniGrid card ─────────────────────────────────────────────────────────────
+class MiniGridCard(tk.Frame):
+    def __init__(self, parent, pm, log):
+        super().__init__(parent, bg=PANEL, highlightthickness=1,
+                         highlightbackground=BORDER)
+        self.pm  = pm
+        self.log = log
+        self._build()
+
+    def _build(self):
+        tk.Frame(self, height=3, bg=ACCENT_MINIGRID).pack(fill="x")
+        inner = tk.Frame(self, bg=PANEL)
+        inner.pack(fill="both", expand=True, padx=14, pady=10)
+
+        row = tk.Frame(inner, bg=PANEL)
+        row.pack(fill="x")
+        tk.Label(row, text="MiniGrid", font=FONT_TITLE,
+                 fg=TEXT, bg=PANEL).pack(side="left")
+        self._dot = tk.Canvas(row, width=10, height=10,
+                              bg=PANEL, highlightthickness=0)
+        self._dot_item = self._dot.create_oval(1,1,9,9, fill=TEXT_DIM, outline="")
+        self._dot.pack(side="right")
+        self._slbl = tk.Label(row, text="idle", font=FONT_UI,
+                              fg=TEXT_DIM, bg=PANEL)
+        self._slbl.pack(side="right", padx=(0,4))
+
+        tk.Frame(inner, height=1, bg=BORDER).pack(fill="x", pady=(8,8))
+
+        tk.Label(inner, text="Runs all levels with pre-trained models.",
+                 font=FONT_UI, fg=TEXT_DIM, bg=PANEL,
+                 wraplength=200, justify="left").pack(anchor="w", pady=(0,10))
+
+        btn_row = tk.Frame(inner, bg=PANEL)
+        btn_row.pack(fill="x")
+        make_btn(btn_row, "▶ Play All Levels", ACCENT_MINIGRID,
+                 lambda: self._launch("minigrid_play", []))
+
+        stop_row = tk.Frame(inner, bg=PANEL)
+        stop_row.pack(fill="x", pady=(10,0))
+        tk.Button(stop_row, text="■ Stop", font=FONT_HEAD,
+                  fg=RED, bg=PANEL, activeforeground=RED,
+                  activebackground=PANEL, relief="flat", bd=0,
+                  padx=8, pady=5, cursor="hand2",
+                  command=lambda: (
+                      self.pm.stop("minigrid_play"),
+                      self._set_status("stopped", TEXT_DIM),
+                  )).pack(side="right")
+
+    def _launch(self, key, args):
+        script = SCRIPTS[key]
+        if not os.path.exists(script):
+            _append(self.log, f"[ERROR] Not found: {script}\n")
+            return
+        self._set_status("starting…", ACCENT_MINIGRID)
+        self.pm.start(key, script, args, self.log,
+                      lambda s: self._set_status(s, {
+                          "running": GREEN, "error": RED,
+                      }.get(s, TEXT_DIM)))
+
+    def _set_status(self, text, color):
+        self.after(0, lambda: (
+            self._slbl.configure(text=text, fg=color),
+            self._dot.itemconfig(self._dot_item, fill=color),
+        ))
+
+
 # ── Main window ───────────────────────────────────────────────────────────────
 class Launcher(tk.Tk):
     def __init__(self):
@@ -400,7 +470,7 @@ class Launcher(tk.Tk):
         hdr.pack(fill="x", padx=20, pady=(16, 0))
         tk.Label(hdr, text="RL Launcher", font=("Segoe UI Semibold", 16),
                  fg=TEXT, bg=BG).pack(side="left")
-        tk.Label(hdr, text="CarRacing · Pong", font=FONT_UI,
+        tk.Label(hdr, text="CarRacing · Pong · MiniGrid", font=FONT_UI,
                  fg=TEXT_DIM, bg=BG).pack(side="left", padx=(10,0), pady=(3,0))
         tk.Frame(self, height=1, bg=BORDER).pack(fill="x", padx=20, pady=(10,0))
 
@@ -435,11 +505,14 @@ class Launcher(tk.Tk):
         cards.pack(fill="x", padx=20, pady=14)
         cards.columnconfigure(0, weight=1)
         cards.columnconfigure(1, weight=1)
+        cards.columnconfigure(2, weight=1)
 
         CarRacingCard(cards, pm, shared_log).grid(
             row=0, column=0, sticky="nsew", padx=(0,7))
         PongCard(cards, pm, shared_log).grid(
-            row=0, column=1, sticky="nsew", padx=(7,0))
+            row=0, column=1, sticky="nsew", padx=(7,7))
+        MiniGridCard(cards, pm, shared_log).grid(
+            row=0, column=2, sticky="nsew", padx=(7,0))
 
 
 if __name__ == "__main__":

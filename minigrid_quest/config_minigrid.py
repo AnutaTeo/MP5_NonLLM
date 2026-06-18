@@ -1,7 +1,9 @@
 from pathlib import Path
 
-MODEL_DIR = Path("models")
-RESULTS_DIR = Path("results")
+BASE=Path(__file__).parent
+
+MODEL_DIR = BASE / "models"
+RESULTS_DIR = BASE / "results"
 
 LEVELS = [
     {

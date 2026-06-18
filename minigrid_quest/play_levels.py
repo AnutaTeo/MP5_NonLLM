@@ -10,7 +10,8 @@ from config_minigrid import (
     MAX_ATTEMPTS_PER_LEVEL,
 )
 from minigrid_env_utils import make_minigrid_env, get_base_env
-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 ACTION_NAMES = {
     0: "turn left",
