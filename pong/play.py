@@ -3,6 +3,7 @@ Human vs AI Pong
   W / S  or  UP / DOWN  — move your paddle (left side)
   ESC / Q                — quit
 """
+import argparse
 import pygame
 import numpy as np
 from stable_baselines3 import PPO
@@ -11,19 +12,13 @@ from pong_env import (
     PADDLE_W, PADDLE_H, BALL_SIZE, PADDLE_SPEED, FPS
 )
 
-MODEL_PATH = "./pong/models/pong_ppo_final"   # or pong_ppo_final.zip
+DEFAULT_MODEL = "./pong/models/best_model.zip"
 
 
 class HumanVsAIEnv(PongEnv):
-    """
-    Overrides _move_opponent() so the LEFT paddle is controlled by
-    keyboard input instead of the rule-based bot.
-    The AI (PPO) still controls the RIGHT paddle via step().
-    """
-
     def __init__(self):
         super().__init__(render_mode="human")
-        self.human_action = 0  # 0=stay 1=up 2=down
+        self.human_action = 0
 
     def set_human_action(self, action: int):
         self.human_action = action
@@ -37,7 +32,13 @@ class HumanVsAIEnv(PongEnv):
 
 
 def main():
-    model = PPO.load(MODEL_PATH)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, default=DEFAULT_MODEL)
+    args = parser.parse_args()
+
+    print(f"Loading model: {args.model}")
+    model = PPO.load(args.model)
+
     env = HumanVsAIEnv()
     obs, _ = env.reset()
     pygame.init()
@@ -72,11 +73,9 @@ def main():
             else:
                 human_score += 1
             print(f"Score  Human {human_score} — AI {ai_score}")
-            # injectează scorul în env înainte de reset
             env.agent_score = ai_score
             env.opponent_score = human_score
             obs, _ = env.reset()
-            # restaurează după reset
             env.agent_score = ai_score
             env.opponent_score = human_score
 

@@ -159,7 +159,7 @@ class PongEnv(gym.Env):
             pygame.init()
             if self.render_mode == "human":
                 self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
-                pygame.display.set_caption("Pong — Human vs AI")
+                pygame.display.set_caption("Pong — Human/AI vs AI")
             else:
                 self.screen = pygame.Surface((SCREEN_W, SCREEN_H))
             self.clock = pygame.time.Clock()

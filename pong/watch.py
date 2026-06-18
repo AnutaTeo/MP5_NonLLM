@@ -1,18 +1,34 @@
+"""
+Pong AI viewer
+  --mode single   : un singur model vs bot
+  --mode double   : doua modele diferite fata in fata
+  --left  <path>  : model stanga  (doar la double)
+  --right <path>  : model dreapta (default: best_model.zip)
+  ESC / Q         : quit
+"""
+import argparse
+import os
+import glob
 import pygame
-import torch
-from stable_baselines3 import PPO
-from pong_env import (
-    PongEnv, SCREEN_W, SCREEN_H,
-    PADDLE_W, PADDLE_H, BALL_SIZE, PADDLE_SPEED, FPS
-)
 import numpy as np
+from stable_baselines3 import PPO
+from pong_env import PongEnv, SCREEN_W, SCREEN_H, PADDLE_SPEED, FPS
 
-MODEL_PATH = "./pong/models/best_model.zip"
+DEFAULT_MODEL = "./pong/models/best_model.zip"
+
+
+def find_oldest_checkpoint():
+    ckpts = sorted(glob.glob("./pong/models/pong_ppo_*_steps.zip"))
+    return ckpts[0] if ckpts else None
+
+
+def mirror_obs(obs):
+    return np.array([
+        1.0 - obs[0], obs[1], -obs[2], obs[3], obs[5], obs[4],
+    ], dtype=np.float32)
 
 
 class AiVsAiEnv(PongEnv):
-    """Ambii paddli controlati de acelasi model."""
-
     def __init__(self):
         super().__init__(render_mode="human")
         self.opponent_action = 0
@@ -21,25 +37,23 @@ class AiVsAiEnv(PongEnv):
         self.opponent_action = action
 
     def _move_opponent(self):
-        # suprascrie bot-ul rule-based cu actiunea AI
         if self.opponent_action == 1:
             self.opponent_y -= PADDLE_SPEED
         elif self.opponent_action == 2:
             self.opponent_y += PADDLE_SPEED
-        self.opponent_y = float(np.clip(self.opponent_y, 0, SCREEN_H - PADDLE_H))
+        self.opponent_y = float(np.clip(self.opponent_y, 0, 480 - 60))
 
 
-def main():
-    model = PPO.load(MODEL_PATH, device="cpu")
-    env = AiVsAiEnv()
+def run_single(model_right_path):
+    """Un model vs bot-ul rule-based din env."""
+    model = PPO.load(model_right_path)
+    env = PongEnv(render_mode="human")
     obs, _ = env.reset()
-
     pygame.init()
     clock = pygame.time.Clock()
-
-    score_left = 0
-    score_right = 0
+    score_bot, score_ai = 0, 0
     running = True
+    print(f"Single mode — AI: {model_right_path}")
 
     while running:
         for event in pygame.event.get():
@@ -49,38 +63,82 @@ def main():
                 if event.key in (pygame.K_ESCAPE, pygame.K_q):
                     running = False
 
-        # obs pentru paddle stanga — obs e din perspectiva paddle-ului drept
-        # inversam pentru a simula perspectiva opusa
-        obs_left = np.array([
-            1.0 - obs[0],   # ball_x inversat
-            obs[1],          # ball_y la fel
-            -obs[2],         # ball_vx inversat
-            obs[3],          # ball_vy la fel
-            obs[5],          # paddle stanga devine "agent"
-            obs[4],          # paddle dreapta devine "opponent"
-        ], dtype=np.float32)
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, terminated, truncated, _ = env.step(int(action))
 
-        action_right, _ = model.predict(obs, deterministic=True)
-        action_left, _ = model.predict(obs_left, deterministic=True)
+        if terminated or truncated:
+            if reward > 0:
+                score_ai += 1
+            elif reward < -1:
+                score_bot += 1
+            print(f"Bot {score_bot} — AI {score_ai}")
+            env.agent_score = score_ai
+            env.opponent_score = score_bot
+            obs, _ = env.reset()
+            env.agent_score = score_ai
+            env.opponent_score = score_bot
 
+        clock.tick(FPS)
+    env.close()
+
+
+def run_double(model_left_path, model_right_path):
+    """Doua modele diferite fata in fata."""
+    model_left  = PPO.load(model_left_path)
+    model_right = PPO.load(model_right_path)
+    env = AiVsAiEnv()
+    obs, _ = env.reset()
+    pygame.init()
+    clock = pygame.time.Clock()
+    score_left, score_right = 0, 0
+    running = True
+    print(f"Double mode — Left: {model_left_path}  Right: {model_right_path}")
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_ESCAPE, pygame.K_q):
+                    running = False
+
+        action_right, _ = model_right.predict(obs, deterministic=True)
+        action_left,  _ = model_left.predict(mirror_obs(obs), deterministic=True)
         env.set_opponent_action(int(action_left))
         obs, reward, terminated, truncated, _ = env.step(int(action_right))
 
         if terminated or truncated:
             if reward > 0:
                 score_right += 1
-            elif reward < 0:
+            elif reward < -1:
                 score_left += 1
-            print(f"AI_left {score_left} — AI_right {score_right}")
-            env.agent_score = score_right
+            print(f"Left {score_left} — Right {score_right}")
+            env.agent_score    = score_right
             env.opponent_score = score_left
             obs, _ = env.reset()
-            env.agent_score = score_right
+            env.agent_score    = score_right
             env.opponent_score = score_left
 
         clock.tick(FPS)
-
     env.close()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode",  type=str, default="single",
+                        choices=["single", "double"])
+    parser.add_argument("--right", type=str, default=DEFAULT_MODEL)
+    parser.add_argument("--left",  type=str, default=None)
+    args = parser.parse_args()
+
+    if args.mode == "single":
+        run_single(args.right)
+    else:
+        left = args.left or find_oldest_checkpoint()
+        if not left:
+            print("Nu am gasit un model pentru stanga. Seteaza --left <path>.")
+            return
+        run_double(left, args.right)
 
 
 if __name__ == "__main__":
