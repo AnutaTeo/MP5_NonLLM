@@ -1,0 +1,6 @@
+MiniGrid evaluation for MiniGrid-Empty-5x5-v0
+------------------------------------
+Random average reward: 0.196
+Trained average reward: 0.955
+Random success rate: 8/20
+Trained success rate: 20/20
