@@ -18,6 +18,9 @@ logs_minigrid/
 */logs_minigrid/
 *.tfevents*
 
+MP5_NonLLM_dragos/
+MP5_NonLLM_pong/
+
 # OS files
 .DS_Store
 Thumbs.db

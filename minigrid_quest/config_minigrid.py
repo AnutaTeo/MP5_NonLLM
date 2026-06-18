@@ -76,6 +76,40 @@ LEVELS = [
         "seed": 111,
         "target_type": "key_door_goal",
     },
+    {
+        "name": "Level 10 - Four Rooms Maze",
+        "env_id": "MiniGrid-FourRooms-v0",
+        "model_path": MODEL_DIR / "ppo_fourrooms_v2",
+        "timesteps": 700_000,
+        "seed": 88,
+        "target_type": "goal",
+    },
+    {
+        "name": "Level 11 - Simple Crossing 9x9",
+        "env_id": "MiniGrid-SimpleCrossingS9N1-v0",
+        "model_path": MODEL_DIR / "ppo_simplecrossing9_v2",
+        "timesteps": 700_000,
+        "seed": 99,
+        "target_type": "goal",
+    },
+    {
+        "name": "Level 12 - Hard Maze 15x15",
+        "env_id": "MiniGrid-HardMaze-15x15-v0",
+        "model_path": MODEL_DIR / "ppo_hardmaze15x15_v2",
+        "timesteps": 800_000,
+        "seed": 150,
+        "target_type": "goal",
+    },
+    {
+        "name": "Level 13 - Lava Maze 15x15",
+        "env_id": "MiniGrid-LavaMaze-15x15-v0",
+        "model_path": MODEL_DIR / "ppo_lavamaze15x15_v2",
+        "timesteps": 1_000_000,
+        "seed": 151,
+        "target_type": "goal",
+        "planner_start": True,
+    },
+    
 ]
 
 EVAL_EPISODES = 10

@@ -383,8 +383,12 @@ def run_level_attempt(level_index, attempt_number):
     last_pos = get_agent_position(env)
     stuck_position_count = 0
 
-    planner_mode = False
+    planner_mode = level.get("planner_start", False)
     planner_activated_reason = None
+
+    if planner_mode:
+        planner_activated_reason = "planner starts immediately for maze level"
+        print(f"Planner mode activated: {planner_activated_reason}")
 
     done_reason = "unknown"
 
@@ -434,6 +438,16 @@ def run_level_attempt(level_index, attempt_number):
         steps += 1
 
         current_pos = get_agent_position(env)
+
+        if (
+            ENABLE_PLANNER_FALLBACK
+            and not planner_mode
+            and action_int == 2
+            and current_pos == last_pos
+        ):
+            planner_mode = True
+            planner_activated_reason = "move forward blocked by wall"
+            print(f"Planner fallback activated: {planner_activated_reason}")
 
         if action_int == last_action:
             same_action_count += 1

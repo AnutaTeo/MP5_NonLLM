@@ -2,6 +2,7 @@ import gymnasium as gym
 import numpy as np
 from gymnasium import spaces
 from minigrid.wrappers import FullyObsWrapper
+import custom_minigrid_envs
 
 
 class FixedSeedWrapper(gym.Wrapper):
