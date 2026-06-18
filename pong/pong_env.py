@@ -65,10 +65,12 @@ class PongEnv(gym.Env):
 
     def _move_opponent(self):
         center = self.opponent_y + PADDLE_H / 2
+        difficulty = min(1.0, self.current_step / 1_000_000)
+        speed = PADDLE_SPEED * (0.75 + 0.25 * difficulty)
         if center < self.ball_y - 5:
-            self.opponent_y += PADDLE_SPEED * 0.85
+            self.opponent_y += speed
         elif center > self.ball_y + 5:
-            self.opponent_y -= PADDLE_SPEED * 0.85
+            self.opponent_y -= speed
         self.opponent_y = float(np.clip(self.opponent_y, 0, SCREEN_H - PADDLE_H))
 
     def step(self, action):
@@ -107,7 +109,7 @@ class PongEnv(gym.Env):
             self.ball_vx = max(self.ball_vx, -MAX_BALL_SPEED)
             offset = (self.ball_y - (self.agent_y + PADDLE_H / 2)) / (PADDLE_H / 2)
             self.ball_vy += offset * 1.5
-            reward += 0.1
+            # reward per hit scos — AI invata sa marcheze, nu sa tina mingea in joc
 
         opponent_paddle_x = 10
         if (
@@ -134,6 +136,9 @@ class PongEnv(gym.Env):
             terminated = True
 
         truncated = self.current_step >= MAX_STEPS
+        #Penalizare pentru match fara gol scos — AI invata sa marcheze, anti infinite loop
+        #if truncated and not terminated:
+            #reward -= 1.0  # penalizare pentru match fara gol
 
         if self.render_mode == "human":
             self._render_frame()

@@ -6,7 +6,7 @@ from pong_env import PongEnv
 
 MODEL_DIR = "./pong/models/"
 LOG_DIR = "./logs/"
-TOTAL_TIMESTEPS = 5_000_000
+TOTAL_TIMESTEPS = 10_000_000
 N_ENVS = 32
 
 
