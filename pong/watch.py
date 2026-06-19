@@ -46,7 +46,7 @@ class AiVsAiEnv(PongEnv):
 
 def run_single(model_right_path):
     """Un model vs bot-ul rule-based din env."""
-    model = PPO.load(model_right_path)
+    model = PPO.load(model_right_path,device="cpu")
     env = PongEnv(render_mode="human")
     obs, _ = env.reset()
     pygame.init()
@@ -84,8 +84,8 @@ def run_single(model_right_path):
 
 def run_double(model_left_path, model_right_path):
     """Doua modele diferite fata in fata."""
-    model_left  = PPO.load(model_left_path)
-    model_right = PPO.load(model_right_path)
+    model_left  = PPO.load(model_left_path,device="cpu")
+    model_right = PPO.load(model_right_path,device="cpu")
     env = AiVsAiEnv()
     obs, _ = env.reset()
     pygame.init()

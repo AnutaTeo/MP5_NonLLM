@@ -37,7 +37,7 @@ def main():
     args = parser.parse_args()
 
     print(f"Loading model: {args.model}")
-    model = PPO.load(args.model)
+    model = PPO.load(args.model,device="cpu")
 
     env = HumanVsAIEnv()
     obs, _ = env.reset()
