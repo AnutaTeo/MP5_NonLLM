@@ -7,10 +7,10 @@ RESULTS_DIR = Path("results")
 VIDEOS_DIR = Path("videos")
 LOG_DIR = Path("logs")
 
-MODEL_PATH = MODEL_DIR / "ppo_carracing_final"
+MODEL_PATH = MODEL_DIR / "ppo_carracing_checkpoint_4800000_steps.zip"
 
 # Recommended: 300k minimum, 500k for best results
-TOTAL_TIMESTEPS = 300000
+TOTAL_TIMESTEPS = 10_000_000
 
 EVAL_EPISODES = 5
 FRAME_STACK = 4
@@ -19,4 +19,4 @@ FRAME_STACK = 4
 USE_CUSTOM_DISCRETE_ACTIONS = True
 
 #paralelizare
-N_ENVS = 4
+N_ENVS = 32
